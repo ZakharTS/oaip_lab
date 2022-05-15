@@ -1,39 +1,57 @@
 #include <iostream>
 #include <string.h>
+
 using namespace std;
 
 struct students {
     char surname[256];
     char name[256];
     char patronymic[256];
-    enum groups {po8, po9, ii21, ii22, unknown} grp;
+    enum groups {
+        po8, po9, ii21, ii22, unknown
+    } grp;
     double avrMark;
     int income;
-    short bit : 4;
+    short bit: 4;
     union {
         int integer;
         double real;
     };
 };
+
 void display_record(students);
+
 void add_record(students *&, size_t &, const char *);
+
 void add_to_array(students *&, size_t &, students);
+
 void list(students *, size_t);
+
 void sort_by(students *, size_t);
+
 void delete_by(students *&, size_t &);
+
 void delete_by_id(students *&, size_t &, size_t);
+
 void list_by_income(students *, size_t, int);
+
 void import_file(const char *, students *&, size_t &);
+
 void rewrite_file(const char *, students *, size_t);
-void read_index_file(const char *, int *);
+
+void read_index_file(const char *, int *, int *, size_t);
+
+void rewrite_index_file(const char *, int *, int *, size_t);
+
 void add_to_index(size_t, students);
 
-char * currentIndexFileName = "group_index.txt";
+char currentIndexFileName[32];
 
 int main() {
-    students * studs = new students[1];
+    students *studs = new students[1];
     size_t n = 0;
     import_file("file.txt", studs, n);
+    strcpy(currentIndexFileName, "group_index.txt");
     int mrot = 400;
     cout << "Welcome to students database.\n";
     short mode = 0;
@@ -71,33 +89,49 @@ int main() {
     return 0;
 }
 
-void read_index_file(const char * filename, int *ind) {
-    FILE * f;
+void read_index_file(const char *filename, int *ind, int *values, size_t n) {
+    FILE *f;
     if ((f = fopen(filename, "r")) == NULL) {
         cout << "Failed to open index file.\n";
         return;
     }
     size_t i = 0;
-    int temp;
-    while(fscanf(f, "%d %d", &ind[i], temp)) {
-        i++;
+    for (size_t i = 0; i < n; i++) {
+        fscanf(f, "%d %d", &ind[i], &values[i]);
     }
+    fclose(f);
+}
+
+void rewrite_index_file(const char *filename, int *ind, int *values, size_t n) {
+    FILE *f;
+    if ((f = fopen(filename, "w")) == NULL) {
+        cout << "Failed to open index file.\n";
+        return;
+    }
+    for (int i = 0; i < n; i++) {
+        fprintf(f, "%d %d\n", ind[i], values[i]);
+    }
+    fclose(f);
 }
 
 void add_to_index(size_t id, students cur) {
-    FILE * f;
-    f = fopen(currentIndexFileName, "a");
-    fprintf(f, "%d", &id);
+    FILE *f;
+    f = fopen("group_index.txt", "a");
+    fprintf(f, "%d %d\n", id, cur.grp);
+    fclose(f);
+    f = fopen("income_index.txt", "a");
+    fprintf(f, "%d %d\n", id, cur.income);
+    fclose(f);
 }
 
-void import_file(const char * filename, students *& studs, size_t &n) {
+void import_file(const char *filename, students *&studs, size_t &n) {
     FILE *f;
     if ((f = fopen(filename, "rb")) == NULL) {
         f = fopen(filename, "wb");
         fclose(f);
         return;
     }
-    for(;;) {
+    for (;;) {
         struct students input;
         if (fread(&input, sizeof(students), 1, f) != 1) break;
         add_to_array(studs, n, input);
@@ -105,7 +139,7 @@ void import_file(const char * filename, students *& studs, size_t &n) {
     fclose(f);
 }
 
-void rewrite_file(const char * filename, students * studs, size_t n) {
+void rewrite_file(const char *filename, students *studs, size_t n) {
     FILE *f = fopen(filename, "wb");
     for (size_t i = 0; i < n; i++) {
         fwrite(&studs[i], sizeof(students), 1, f);
@@ -113,7 +147,7 @@ void rewrite_file(const char * filename, students * studs, size_t n) {
     fclose(f);
 }
 
-void add_record(students *&studs, size_t &n, const char * filename) {
+void add_record(students *&studs, size_t &n, const char *filename) {
     cout << "Add a record. Fields:\nSurname. Name. Patronymic. Group. Average mark. Income per family member.\n";
     char group[256];
     students current;
@@ -133,11 +167,11 @@ void add_record(students *&studs, size_t &n, const char * filename) {
     FILE *f = fopen(filename, "ab");
     fwrite(&current, sizeof(students), 1, f);
     fclose(f);
-    add_to_index(n-1, current);
+    add_to_index(n - 1, current);
 }
 
-void add_to_array(students *& studs, size_t &n, students toAdd) {
-    students * temp = new students[n+1];
+void add_to_array(students *&studs, size_t &n, students toAdd) {
+    students *temp = new students[n + 1];
     for (size_t i = 0; i < n; i++) {
         temp[i] = studs[i];
     }
@@ -171,42 +205,54 @@ void display_record(students cur) {
 
 void list(students *studs, size_t n) {
     cout << "Students list. Fields:\nSurname. Name. Patronymic. Group. Average mark. Income per family member.\n";
-    int ind[n];
-    read_index_file("index.txt", ind);
+    int ind[n], values[n];
+    read_index_file(currentIndexFileName, ind, values, n);
     for (size_t i = 0; i < n; i++) {
         cout << i + 1 << ") ";
         display_record(studs[ind[i]]);
     }
 }
 
-void sort_by(students * studs, size_t n) {
+void sort_by(students *studs, size_t n) {
     cout << "Sort by:\n";
     cout << "1 - group. 2 - income.\n> ";
     short mode;
     cin >> mode;
     switch (mode) {
         case 1:
-            currentIndexFileName = "group_index.txt";
+            strcpy(currentIndexFileName, "group_index.txt");
             break;
         case 2:
-            currentIndexFileName = "income_index.txt";
+            strcpy(currentIndexFileName, "income_index.txt");
             break;
         default:
             cout << "Unknown.\n";
             return;
     }
-    for(size_t i = 1; i < n; i++) {
-        for (size_t j = i; j > 0 && studs[j-1].grp > studs[j].grp; j--) {
-            swap(studs[j], studs[j-1]);
+    int ind[n], values[n];
+    read_index_file(currentIndexFileName, ind, values, n);
+    for (size_t i = 1; i < n; i++) {
+        for (size_t j = i; j > 0 && values[j - 1] > values[j]; j--) {
+            swap(values[j], values[j - 1]);
+            swap(ind[j], ind[j - 1]);
         }
     }
-
+    rewrite_index_file(currentIndexFileName, ind, values, n);
 }
+
 void delete_by_id(students *&studs, size_t &n, size_t id) {
     n--;
+    int ind[n], groups[n], incomes[n];
     for (size_t j = id; j < n; j++) {
         studs[j] = studs[j + 1];
     }
+    for (size_t i = 0; i < n; i++) {
+        ind[i] = i;
+        groups[i] = studs[i].grp;
+        incomes[i] = studs[i].income;
+    }
+    rewrite_index_file("group_index.txt", ind, groups, n);
+    rewrite_index_file("income_index.txt", ind, incomes, n);
 }
 
 void delete_by(students *&studs, size_t &n) {
@@ -272,21 +318,23 @@ void delete_by(students *&studs, size_t &n) {
             return;
             break;
     }
-    students * temp = new students[n];
-    for(size_t i = 0; i < n; i++) {
+    students *temp = new students[n];
+    for (size_t i = 0; i < n; i++) {
         temp[i] = studs[i];
     }
     delete[] studs;
     studs = temp;
 }
 
-void list_by_income(students * studs, size_t n, int mrot) {
+void list_by_income(students *studs, size_t n, int mrot) {
     mrot *= 2;
     size_t j = 1;
+    int ind[n], values[n];
+    read_index_file("income_index.txt", ind, values, n);
     for (size_t i = 0; i < n; i++) {
-        if (studs[i].income < mrot) {
+        if (values[i] < mrot) {
             cout << j << ") ";
-            display_record(studs[i]);
+            display_record(studs[ind[i]]);
             j++;
         }
     }
