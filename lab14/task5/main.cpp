@@ -18,7 +18,6 @@ int main() {
         list_add(list, val);
     }
     listnode *revlist = list_copy(list);
-    //listnode *revlist = list;
     revlist = list_reverse(revlist);
     list_display(revlist);
     return 0;

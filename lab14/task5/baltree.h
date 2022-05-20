@@ -1,0 +1,6 @@
+#ifndef TASK5_BALTREE_H
+#define TASK5_BALTREE_H
+
+
+
+#endif //TASK5_BALTREE_H
