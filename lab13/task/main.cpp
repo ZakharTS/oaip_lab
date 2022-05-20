@@ -9,7 +9,6 @@ int main() {
     students *studs = new students[1];
     size_t n = 0;
     import_file("file.txt", studs, n);
-    strcpy(currentIndexFileName, "group_index.txt");
     int mrot = 400;
     cout << "Welcome to students database.\n";
     short mode = 0;

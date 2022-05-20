@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string.h>
+
 using namespace std;
 
 struct students {
@@ -36,4 +37,5 @@ void delete_by(students *&, size_t &);
 void delete_by_id(students *&, size_t &, size_t);
 
 void list_by_income(students *, size_t, int);
+
 #endif

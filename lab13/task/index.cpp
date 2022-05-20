@@ -1,4 +1,5 @@
 #include "index.h"
+#include <string.h>
 
 void read_index_file(const char *filename, int *ind, int *values, size_t n) {
     FILE *f;
@@ -6,9 +7,8 @@ void read_index_file(const char *filename, int *ind, int *values, size_t n) {
         cout << "Failed to open index file.\n";
         return;
     }
-    size_t i = 0;
     for (size_t i = 0; i < n; i++) {
-        fscanf(f, "%d %d", &ind[i], &values[i]);
+        fscanf(f, "%d %d", ind+i, values+i);
     }
     fclose(f);
 }

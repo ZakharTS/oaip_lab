@@ -1,6 +1,8 @@
 #include "database.h"
 #include "index.h"
 
+extern char currentIndexFileName[32];
+
 void add_record(students *&studs, size_t &n, const char *filename) {
     cout << "Add a record. Fields:\nSurname. Name. Patronymic. Group. Average mark. Income per family member.\n";
     char group[256];
@@ -60,6 +62,8 @@ void display_record(students cur) {
 void list(students *studs, size_t n) {
     cout << "Students list. Fields:\nSurname. Name. Patronymic. Group. Average mark. Income per family member.\n";
     int ind[n], values[n];
+    extern char currentIndexFileName[32];
+    if (!strcmp(currentIndexFileName, "")) strcpy(currentIndexFileName, "group_index.txt");
     read_index_file(currentIndexFileName, ind, values, n);
     for (size_t i = 0; i < n; i++) {
         cout << i + 1 << ") ";
